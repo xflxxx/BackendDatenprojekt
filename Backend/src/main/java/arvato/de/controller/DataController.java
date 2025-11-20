@@ -3,6 +3,7 @@ package arvato.de.controller;
 import arvato.de.model.Data;
 import arvato.de.repository.Repo;
 import arvato.de.service.OwidService;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,13 +20,21 @@ public class DataController {
     @Autowired
     private Repo repo;
 
-    public void createDB() throws Exception {
+    private void createDB() throws Exception {
         owidService.saveData();
     }
 
-    @GetMapping()
+    @GetMapping("/get_data")
     public List<Data> getData() throws Exception {
-        createDB();
+        if (repo.findAll().isEmpty()) {
+            createDB();
+        }
         return repo.findAll();
+    }
+
+    @PostConstruct
+    public void clearTable() throws Exception {
+        repo.deleteAll();
+        System.out.println("cleared table");
     }
 }

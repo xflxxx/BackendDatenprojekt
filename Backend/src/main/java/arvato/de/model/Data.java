@@ -1,27 +1,18 @@
 package arvato.de.model;
 
 import jakarta.persistence.*;
-import org.springframework.stereotype.Component;
 
 @Entity
 @Table(name = "dataTable")
 public class Data {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
     @Column(name = "data_year")
     private int year;
+
     private String co2;
     private String coal;
     private String oil;
-
-    public long getId() {
-        return id;
-    }
-    public void setId(long id) {
-        this.id = id;
-    }
 
     public String getOil() {
         return oil;
