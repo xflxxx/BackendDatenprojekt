@@ -78,6 +78,7 @@ public class OwidService {
                 }
             }
         }
+
         repository.saveAll(dataMap.values());
     }
 }
