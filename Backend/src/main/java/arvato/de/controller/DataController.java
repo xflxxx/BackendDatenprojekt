@@ -1,13 +1,12 @@
 package arvato.de.controller;
 
-import arvato.de.model.Data;
-import arvato.de.repository.Repo;
+import arvato.de.model.EnergyData;
+import arvato.de.repository.EnergyDataRepository;
 import arvato.de.service.OwidService;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.sql.SQLOutput;
 import java.util.List;
 
 @RestController
@@ -17,24 +16,20 @@ public class DataController {
 
     @Autowired
     private OwidService owidService;
-    @Autowired
-    private Repo repo;
 
-    private void createDB() throws Exception {
-        owidService.saveData();
-    }
+    @Autowired
+    private EnergyDataRepository repository;
 
     @GetMapping("/get_data")
-    public List<Data> getData() throws Exception {
-        if (repo.findAll().isEmpty()) {
-            createDB();
+    public List<EnergyData> getData() throws Exception {
+        if (repository.findAll().isEmpty()) {
+            owidService.saveData();
         }
-        return repo.findAll();
+        return repository.findAll();
     }
 
     @PostConstruct
-    public void clearTable() throws Exception {
-        repo.deleteAll();
-        System.out.println("cleared table");
+    public void clearTable() {
+        repository.deleteAll();
     }
 }

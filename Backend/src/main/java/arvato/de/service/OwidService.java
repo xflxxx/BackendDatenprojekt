@@ -1,7 +1,7 @@
 package arvato.de.service;
 
-import arvato.de.model.Data;
-import arvato.de.repository.Repo;
+import arvato.de.model.EnergyData;
+import arvato.de.repository.EnergyDataRepository;
 import com.opencsv.CSVReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,7 +15,7 @@ import java.util.*;
 public class OwidService {
 
     @Autowired
-    Repo repo;
+    private EnergyDataRepository repository;
 
     private static final String CONSUMPTION_URL =
             "https://raw.githubusercontent.com/owid/energy-data/master/owid-energy-data.csv";
@@ -24,87 +24,60 @@ public class OwidService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    private Map<Integer, Data> getConsumptionData() throws Exception {
-        byte[] csvBytes = restTemplate.getForObject(CONSUMPTION_URL, byte[].class);
-        Map<Integer, Data> map = new LinkedHashMap<>();
-
-        try (InputStream is = new ByteArrayInputStream(csvBytes);
-             CSVReader reader = new CSVReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
-            String[] headers = reader.readNext();
-            String[] line;
-
-            while ((line = reader.readNext()) != null) {
-                Map<String, String> row = new HashMap<>();
-                for (int i = 0; i < headers.length; i++) {
-                    row.put(headers[i], line[i]);
-                }
-
-                int year = Integer.parseInt(row.get("year"));
-                if (year < 2000) {
-                    continue;
-                }
-
-                if (!"Germany".equals(row.get("country"))) {
-                    continue;
-                }
-
-                Data data = new Data();
-                data.setYear(year);
-                data.setOil(row.get("oil_consumption"));
-                data.setCoal(row.get("coal_consumption"));
-                map.put(year, data);
-            }
-        }
-        return map;
-    }
-
-    private Map<Integer, String> getCo2Data() throws Exception {
-        byte[] csvBytes = restTemplate.getForObject(CO2_URL, byte[].class);
-        Map<Integer, String> map = new LinkedHashMap<>();
-
-        try (InputStream is = new ByteArrayInputStream(csvBytes);
-             CSVReader reader = new CSVReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
-            String[] headers = reader.readNext();
-            String[] line;
-
-            while ((line = reader.readNext()) != null) {
-                Map<String, String> row = new HashMap<>();
-                for (int i = 0; i < headers.length; i++) {
-                    row.put(headers[i], line[i]);
-                }
-
-                int year = Integer.parseInt(row.get("year"));
-                if (year < 2000) {
-                    continue;
-                }
-
-                if (!"Germany".equals(row.get("country"))) {
-                    continue;
-                }
-
-                map.put(year, row.get("co2"));
-            }
-        }
-        return map;
-    }
-
     public void saveData() throws Exception {
-        System.out.println("start map1");
-        Map<Integer, Data> map = getConsumptionData();
-        System.out.println("finished map1");
-        System.out.println("start map2");
-        Map<Integer, String> co2 = getCo2Data();
-        System.out.println("finished map2");
+        byte[] energyBytes = restTemplate.getForObject(CONSUMPTION_URL, byte[].class);
+        Map<Integer, EnergyData> dataMap = new HashMap<>();
 
-        System.out.println("started combining maps");
-        for (Map.Entry<Integer, Data> entry : map.entrySet()) {
-            Integer year = entry.getKey();
-            entry.getValue().setCo2(co2.get(year));
+        try (InputStream is = new ByteArrayInputStream(energyBytes);
+             CSVReader reader = new CSVReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+
+            String[] headers = reader.readNext();
+            String[] line;
+
+            while ((line = reader.readNext()) != null) {
+                Map<String, String> row = new HashMap<>();
+                for (int i = 0; i < headers.length; i++) {
+                    row.put(headers[i], line[i]);
+                }
+
+                int year = Integer.parseInt(row.get("year"));
+                if (year < 1960 || !"Germany".equals(row.get("country"))) {
+                    continue;
+                }
+
+                EnergyData data = new EnergyData();
+                data.setYear(year);
+                data.setRenewablesTotal(row.get("renewables_consumption"));
+                data.setFossilTotal(row.get("fossil_fuel_consumption"));
+
+                dataMap.put(year, data);
+            }
         }
-        System.out.println("finished combining maps");
 
-        System.out.println("started saving all values");
-        repo.saveAll(map.values());
-        System.out.println("finished saving all values");
+        byte[] co2Bytes = restTemplate.getForObject(CO2_URL, byte[].class);
+
+        try (InputStream is = new ByteArrayInputStream(co2Bytes);
+             CSVReader reader = new CSVReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+
+            String[] headers = reader.readNext();
+            String[] line;
+
+            while ((line = reader.readNext()) != null) {
+                Map<String, String> row = new HashMap<>();
+                for (int i = 0; i < headers.length; i++) {
+                    row.put(headers[i], line[i]);
+                }
+
+                int year = Integer.parseInt(row.get("year"));
+                if (year < 1960 || !"Germany".equals(row.get("country"))) {
+                    continue;
+                }
+
+                if (dataMap.containsKey(year)) {
+                    dataMap.get(year).setCo2(row.get("co2"));
+                }
+            }
+        }
+        repository.saveAll(dataMap.values());
     }
 }
