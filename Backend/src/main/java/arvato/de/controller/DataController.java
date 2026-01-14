@@ -47,7 +47,6 @@ public class DataController {
             fossilService.saveFossilData();
             renewableService.saveRenewableData();
         }
-        System.out.println(dtoService.getAllEnergyData().toString());
         return dtoService.getAllEnergyData();
     }
 

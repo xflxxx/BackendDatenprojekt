@@ -44,14 +44,4 @@ public class EnergyDataDTO {
     public void setRenewableData(String renewableData) {
         this.renewableData = renewableData;
     }
-
-    @Override
-    public String toString() {
-        return "EnergyDataDTO{" +
-                "year=" + year +
-                ", co2Value=" + co2Data +
-                ", fossilValue=" + fossilData +
-                ", renewableValue=" + renewableData +
-                '}';
-    }
 }
