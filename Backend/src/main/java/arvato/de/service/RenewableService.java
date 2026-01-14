@@ -23,7 +23,6 @@ public class RenewableService {
     private static final String CONSUMPTION_URL = "https://raw.githubusercontent.com/owid/energy-data/master/owid-energy-data.csv";
 
     public void saveRenewableData() throws Exception {
-
         URL url = new URL(CONSUMPTION_URL);
         InputStream stream = url.openStream();
         InputStreamReader streamReader = new InputStreamReader(stream, StandardCharsets.UTF_8);
