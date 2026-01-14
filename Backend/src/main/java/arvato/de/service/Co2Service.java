@@ -5,7 +5,6 @@ import arvato.de.repository.Co2Repository;
 import com.opencsv.CSVReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.io.*;
 import java.net.URL;

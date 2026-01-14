@@ -8,7 +8,6 @@ import arvato.de.service.Co2Service;
 import arvato.de.service.DTOService;
 import arvato.de.service.FossilService;
 import arvato.de.service.RenewableService;
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -50,10 +49,14 @@ public class DataController {
         return dtoService.getAllEnergyData();
     }
 
-    @PostConstruct
-    public void clearTable() {
-        fossilRepository.deleteAll();
+    @PostMapping("/reload_data")
+    public List<EnergyDataDTO> reloadData() throws Exception {
         co2Repository.deleteAll();
+        fossilRepository.deleteAll();
         renewableRepository.deleteAll();
+        co2Service.saveCo2Data();
+        fossilService.saveFossilData();
+        renewableService.saveRenewableData();
+        return dtoService.getAllEnergyData();
     }
 }
